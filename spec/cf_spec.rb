@@ -1,4 +1,4 @@
-require_relative 'cf_classes.rb'
+require_relative '../source/cf_classes.rb'
 require 'stringio'
 
 describe ConnectFour do
@@ -51,21 +51,41 @@ describe ConnectFour do
 	
 	describe ".main" do
 		subject { main }
-		let(:main) do 
-			ConnectFour.main	
-		end
+		let(:main) { ConnectFour.main	}
+		let(:save_file) { File.open("cf_save_example.yml") }
 		
 		it "accepts \"new\" or \"load\" as input" do
-			expect(ConnectFour).to receive(:gets).and_return ["new", "load"].sample
+			expect(ConnectFour).to receive(:gets).and_return "new"
 			expect { main }.not_to raise_error
 		end
 		
-		context "when the user chooses \"load\"" do
-			allow(ConnectFour).to receive(:gets).and_return("load", "cf_save_example.yml")
-			
+		context "when the user chooses \"load\"" do			
 			it "loads the given file" do
-				expect(ConnectFour).to receive(:load).and_return ConnectFour.new("cf_save_example.yml")
+				expect(ConnectFour).to receive(:gets).and_return("load", "cf_save_example.yml")
+				expect(ConnectFour).to receive(:load).and_return ConnectFour.new(save_file)
+				expect { main }.not_to raise_error
 			end
+		end
+	end
+	
+	describe ".load" do
+		subject { load }
+		let(:file_name) { "cf_save_example.yml" }
+		let(:load) { ConnectFour.load(file_name) }
+		let(:stream) { File.open(file_name) }
+		
+		it "accepts one string as an argument" do
+			expect { ConnectFour.load(12) }.to raise_error(Errno::EBADF)
+			expect { load }.not_to raise_error
+		end
+		
+		it "opens a file with the given name" do
+			expect(File).to receive(:open).and_return ConnectFour.new(stream)
+			load
+		end
+		
+		it "returns a new game instance" do
+			expect(load).to be_an_instance_of ConnectFour
 		end
 	end
 	
@@ -74,15 +94,16 @@ describe ConnectFour do
 		let(:one_arg) { ConnectFour.prompt("This will fail") }
 		let(:message) { "Test message" }
 		let(:valid_args) { ["yes", "maybe", "no"] }
+		let(:block_result) { 2 }
+		let(:block) { lambda { |answer| return block_result } }
 		let(:no_block) do
 			allow(STDIN).to receive(:gets).and_return(valid_args.sample)
-			
 			ConnectFour.prompt(message, valid_args)
 		end
 		
 		let(:prompt) do 
 			expect(ConnectFour).to receive(:gets).and_return valid_args.sample
-			ConnectFour.prompt(message, valid_args)	{ |answer| return }
+			ConnectFour.prompt(message, valid_args, &block)
 		end
 		
 		it "accepts two arguments" do
@@ -93,6 +114,15 @@ describe ConnectFour do
 			expect(message).to be_an_instance_of String
 			expect(valid_args).to be_an_instance_of Array
 			expect{ prompt }.not_to raise_error
+		end
+		
+		it "prints the given string" do
+			expect(ConnectFour).to receive(:puts).with(message)
+			prompt
+		end
+		
+		it "executes the block if a valid response is given" do
+			expect(prompt).to eq block_result
 		end
 	end
 	
