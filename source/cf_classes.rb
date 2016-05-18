@@ -25,13 +25,13 @@ class ConnectFour
 				
 				game = load(file_name)
 			end
-			
-			
 		end
 	end
 	
 	def self.load(file_name)
-		
+		File.open(file_name) do |f|
+			ConnectFour.new(f)
+		end
 	end
 	
 	def self.prompt(message, valid_responses)		
@@ -50,12 +50,14 @@ class ConnectFour
 	end
 	
 	def initialize(stream = nil)
-		if stream
+		if stream.nil?
+			@board = Board.new
+		else
 			stream.seek(0) # guarantee that we are at the beginning of the file
 			@board = YAML.load(stream.read)
-		else
-			@board = Board.new
 		end
+		
+		@players = { "Player 1" => "O", "Player 2" => "@" }
 	end
 	
 	def save(stream)
@@ -65,15 +67,19 @@ end
 
 class Board
 	attr_reader :rows
+	
+	HEIGHT = 6
+	LENGTH = 7
 
 	def initialize(rows = nil)
-		rows ||= Array.new(6) { |i| i = Array.new(7) { |j| i = " " } }
+		rows ||= Array.new(HEIGHT) { |i| i = Array.new(LENGTH) { |j| j = " " } }
+		
+		raise InvalidInputError unless rows.length == HEIGHT && rows.all? { |r| r.length == LENGTH }
+		
 		@rows = rows
 	end
 	
 	def ==(other_board)
 		other_board.is_a?(Board) && other_board.rows == @rows
 	end
-	
-	
 end

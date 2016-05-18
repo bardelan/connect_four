@@ -2,7 +2,7 @@ require_relative '../source/cf_classes.rb'
 require 'stringio'
 
 describe ConnectFour do
-		subject { game }
+	subject { game }
 	let(:game) { ConnectFour.new }
 	
 	before { $stdout = StringIO.new }
@@ -13,17 +13,17 @@ describe ConnectFour do
 	
 	after(:all) { $stdout = STDOUT }
 	
-	let(:sample_board) do
+	let(:rows) do
 		rows = []
 		
-		5.times do
-			rows.push(Array.new(7) { |i| i = " " })
+		(Board::HEIGHT - 1).times do
+			rows.push(Array.new(Board::LENGTH) { |i| i = " " })
 		end
 		
 		rows.push([" ", "@", "O", "O", "O", "@", " "])
-		
-		Board.new(rows)
 	end
+	
+	let(:sample_board) { Board.new(rows) }
 	
 	context "when initialized with no arguments" do
 		let(:blank_board) { Board.new }
@@ -49,10 +49,15 @@ describe ConnectFour do
 		end
 	end
 	
+	it "sets players and their markers" do
+		expect(game.players).to eq { "Player 1" => "O", "Player 2" => "@" }
+	end
+	
 	describe ".main" do
 		subject { main }
 		let(:main) { ConnectFour.main	}
-		let(:save_file) { File.open("cf_save_example.yml") }
+		let(:file_name) { "cf_save_example.yml" }
+		let(:save_file) { File.open(file_name) }
 		
 		it "accepts \"new\" or \"load\" as input" do
 			expect(ConnectFour).to receive(:gets).and_return "new"
@@ -61,7 +66,7 @@ describe ConnectFour do
 		
 		context "when the user chooses \"load\"" do			
 			it "loads the given file" do
-				expect(ConnectFour).to receive(:gets).and_return("load", "cf_save_example.yml")
+				expect(ConnectFour).to receive(:gets).and_return("load", file_name)
 				expect(ConnectFour).to receive(:load).and_return ConnectFour.new(save_file)
 				expect { main }.not_to raise_error
 			end
@@ -149,6 +154,53 @@ describe ConnectFour do
 		
 		it "saves the correct data" do
 			expect(load).to eq sample_board
+		end
+	end
+end
+
+describe Board do
+	subject { board }
+	let(:empty_rows) { Array.new(Board::HEIGHT) { |i| i = Array.new(Board::LENGTH) { |j| i = " " } } }
+	let(:empty_board) { Board.new }
+	let(:sample_rows) do
+		rows = []
+		
+		(Board::HEIGHT - 1).times do
+			rows.push(Array.new(Board::LENGTH) { |i| i = " " })
+		end
+		
+		rows.push([" ", "@", "O", "O", "O", "@", " "])
+	end
+	let(:saved_board) { Board.new(sample_rows) }
+	
+	it "contains an array of arrays" do
+		expect(empty_board.rows).to be_an_instance_of Array
+		expect(empty_board.rows).to all(be_an_instance_of Array)
+	end
+	
+	it "is equal to a board with identical rows" do
+		expect(saved_board).to eq Board.new(sample_rows)
+	end
+
+	describe "#rows" do
+		context "when the board is initialized with no arguments" do
+			it "has all blank rows" do
+				expect(empty_board.rows).to eq empty_rows
+			end
+		end
+		
+		context "when the board is initialized with a valid array" do
+			it "sets the rows equal to the array" do
+				expect(saved_board.rows).to eq sample_rows
+			end
+		end
+		
+		it "has a number of rows equal to the board's height" do
+			expect(empty_board.rows.length).to eq Board::HEIGHT
+		end
+		
+		it "has a row length equal to the board's length" do
+			expect(empty_board.rows.all? { |r| r.length == Board::LENGTH }).to be true
 		end
 	end
 end
