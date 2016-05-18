@@ -24,6 +24,7 @@ describe ConnectFour do
 	end
 	
 	let(:sample_board) { Board.new(rows) }
+	let(:sample_players) { { "Player 1" => "O", "Player 2" => "@" } }
 	
 	context "when initialized with no arguments" do
 		let(:blank_board) { Board.new }
@@ -50,7 +51,7 @@ describe ConnectFour do
 	end
 	
 	it "sets players and their markers" do
-		expect(game.players).to eq { "Player 1" => "O", "Player 2" => "@" }
+		expect(game.players).to eq sample_players
 	end
 	
 	describe ".main" do
@@ -182,7 +183,7 @@ describe Board do
 		expect(saved_board).to eq Board.new(sample_rows)
 	end
 
-	describe "#rows" do
+	describe "@rows" do
 		context "when the board is initialized with no arguments" do
 			it "has all blank rows" do
 				expect(empty_board.rows).to eq empty_rows

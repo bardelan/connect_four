@@ -82,4 +82,23 @@ class Board
 	def ==(other_board)
 		other_board.is_a?(Board) && other_board.rows == @rows
 	end
+	
+	def empty_cell?(row, col)
+		@rows[row-1][col] == " "
+	end
+	
+	def render
+		(HEIGHT-1).downto(0) do |row|
+			LENGTH.times { print " - " }
+			print "\n"
+			
+			LENGTH.times do |col|
+				print "|#{@rows[row][col]}|"
+			end
+			
+			print "\n"
+			LENGTH.times { print " - " }
+			print "\n"
+		end
+	end
 end
