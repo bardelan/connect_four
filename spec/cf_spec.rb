@@ -204,4 +204,31 @@ describe Board do
 			expect(empty_board.rows.all? { |r| r.length == Board::LENGTH }).to be true
 		end
 	end
+
+	describe "#check_for_four" do
+		let(:row_idx) { 5 }
+		let(:col_idx) { 3 }
+		let(:token) { "O" }
+
+		subject { board.check_for_four(row_idx, col_idx, token) }
+
+		it "takes a row index, column index, and string as arguments" do
+			expect { saved_board.check_for_four(row_idx, col_idx, token) }.not_to raise_error
+			expect { saved_board.check_for_four("this", "will", "fail") }.to raise_error(TypeError)
+			expect { saved_board.check_for_four(row_idx, col_idx) }.to raise_error(ArgumentError)
+		end
+
+		context "when there are four in a row horizontally" do
+			let(:four_in_row) do
+				rows = []
+			
+				(Board::HEIGHT - 1).times do
+					rows.push(Array.new(Board::LENGTH) { |i| i = " " })
+				end
+				
+				rows.push([" ", "@", "O", "O", "O", "O", " "])
+			end
+			let(:board) { Board.new(four_in_row) }
+		end
+	end
 end

@@ -63,6 +63,10 @@ class ConnectFour
 	def save(stream)
 		stream.write(YAML.dump(@board))	
 	end
+
+	def play
+
+	end
 end
 
 class Board
