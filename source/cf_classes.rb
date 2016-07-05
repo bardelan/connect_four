@@ -112,7 +112,7 @@ class Board
 		end
 	end
 	
-	def check_for_four(token, &forward, &back)
+	def check_for_four(token, forward, back)
 		continue = { :fwd => true, :back => true }
 		count = { :fwd => 0, :back => 0 }
 		cells = { :fwd => forward, :back => back }

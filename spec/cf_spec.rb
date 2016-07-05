@@ -57,7 +57,7 @@ describe ConnectFour do
 	describe ".main" do
 		subject { main }
 		let(:main) { ConnectFour.main	}
-		let(:file_name) { "cf_save_example.yml" }
+		let(:file_name) { "/home/marmo/Sites/the_odin_project/ruby/rspec/connect_four/spec/cf_save_example.yml" }
 		let(:save_file) { File.open(file_name) }
 		
 		it "accepts \"new\" or \"load\" as input" do
@@ -209,7 +209,7 @@ describe Board do
 		let(:row_idx) { 5 }
 		let(:col_idx) { 3 }
 		let(:token) { "O" }
-
+		let(:board) { saved_board }
 		subject { board.check_for_four(row_idx, col_idx, token) }
 
 		it "takes a row index, column index, and string as arguments" do
@@ -229,6 +229,86 @@ describe Board do
 				rows.push([" ", "@", "O", "O", "O", "O", " "])
 			end
 			let(:board) { Board.new(four_in_row) }
+
+			it { is_expected.to be true }
+		end
+
+		context "when there are four in a row vertically" do
+			let(:row_idx) { 3 }
+			let(:four_in_row) do
+				rows = []
+
+				4.times do
+					rows.push([" ", " ", " ", "0", " ", " ", " "])
+				end
+
+				(Board::HEIGHT - 4).times do
+					rows.push([" ", " ", " ", " ", " ", " ", " "])
+				end
+
+				rows
+			end
+			let(:board) { Board.new(four_in_row) }
+
+			it { is_expected.to be true }
+		end
+
+		context "when there are four in a row on a northwest diagonal" do
+			let(:row_idx) { 3 }
+			let(:four_in_row) do
+				rows = []
+				placement = 3
+
+				Board::HEIGHT.times do |i|
+					Board::LENGTH.times do |j|
+						curr_row = []
+
+						if placement > -1 && j == placement
+							curr_row << token
+							placement -= 1
+						else
+							curr_row << " "
+						end
+
+						rows.push(curr_row)
+					end
+				end
+
+				rows
+			end
+
+			let(:board) { Board.new(four_in_row) }
+
+			it { is_expected.to be true }
+		end
+
+		context "when there are four in a row on a northeast diagonal" do
+			let(:row_idx) { 3 }
+			let(:four_in_row) do
+				rows = []
+				placement = 0
+
+				Board::HEIGHT.times do |i|
+					Board::LENGTH.times do |j|
+						curr_row = []
+
+						if placement < 4 && j == placement
+							curr_row << token
+							placement += 1
+						else
+							curr_row << " "
+						end
+
+						rows.push(curr_row)
+					end
+				end
+
+				rows
+			end
+
+			let(:board) { Board.new(four_in_row) }
+
+			it { is_expected.to be true }
 		end
 	end
 end
