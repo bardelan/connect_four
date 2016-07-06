@@ -78,7 +78,7 @@ class Board
 	def initialize(rows = nil)
 		rows ||= Array.new(HEIGHT) { |i| i = Array.new(LENGTH) { |j| j = " " } }
 		
-		raise InvalidInputError unless rows.length == HEIGHT && rows.all? { |r| r.length == LENGTH }
+		raise InvalidInputError("Invalid board dimensions") unless rows.length == HEIGHT && rows.all? { |r| r.length == LENGTH }
 		
 		@rows = rows
 	end
@@ -99,20 +99,14 @@ class Board
 	
 	def render
 		(HEIGHT-1).downto(0) do |row|
-			LENGTH.times { print " - " }
-			print "\n"
 			
-			LENGTH.times do |col|
-				print "|#{@rows[row][col]}|"
-			end
-			
-			print "\n"
-			LENGTH.times { print " - " }
+			LENGTH.times { |col| print "|#{@rows[row][col]}|" }
+
 			print "\n"
 		end
 	end
 	
-	def check_for_four(token, forward, back)
+	def check_for_four(token, forward, back, row, col)
 		continue = { :fwd => true, :back => true }
 		count = { :fwd => 0, :back => 0 }
 		cells = { :fwd => forward, :back => back }
@@ -120,7 +114,14 @@ class Board
 		1.upto 3 do |i|
 			[:fwd, :back].each do |d|
 				if continue[d]
-					if cells[d].call(i) == token
+					begin
+						#raises NoMethodError if cell checked does not exist
+						actual_token = instance_exec(row, col, i, &cells[d])
+					rescue NoMethodError => e
+						actual_token = " "
+					end
+
+					if actual_token == token
 						count[d] += 1
 					else
 						continue[d] = false
@@ -137,30 +138,30 @@ class Board
 	end
 	
 	def diag_ne_win?(row, col, token)
-		fwd = Proc.new { |i| @rows[row + i][col + i] }
-		back = Proc.new { |i| @rows[row + i][col - i] }
+		fwd = Proc.new { |row, col, i| @rows[row + i][col + i] }
+		back = Proc.new { |row, col, i| @rows[row - i][col - i] }
 		
-		check_for_four(token, fwd, back)
+		check_for_four(token, fwd, back, row, col)
 	end
 	
 	def diag_nw_win?(row, col, token)
-		fwd = Proc.new { |i| @rows[row - i][col + i] }
-		back = Proc.new { |i| @rows[row - i][col - i] }
+		fwd = Proc.new { |row, col, i| @rows[row + i][col - i] }
+		back = Proc.new { |row, col, i| @rows[row - i][col + i] }
 		
-		check_for_four(token, fwd, back)
+		check_for_four(token, fwd, back, row, col)
 	end
 	
 	def horizontal_win?(row, col, token)
-		fwd = Proc.new { |i| @rows[row][col + i] }
-		back = Proc.new { |i| @rows[row][col - i] }
+		fwd = Proc.new { |row, col, i| @rows[row][col + i] }
+		back = Proc.new { |row, col, i| @rows[row][col - i] }
 		
-		check_for_four(token, fwd, back)
+		check_for_four(token, fwd, back, row, col)
 	end
 	
 	def vertical_win?(row, col, token)
-		fwd = Proc.new { |i| @rows[row + i][col] }
-		back = Proc.new { |i| @rows[row - i][col] }
+		fwd = Proc.new { |row, col, i| @rows[row + i][col] }
+		back = Proc.new { |row, col, i| @rows[row - i][col] }
 		
-		check_for_four(token, fwd, back)
+		check_for_four(token, fwd, back, row, col)
 	end
 end
