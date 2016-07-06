@@ -78,7 +78,7 @@ class Board
 	def initialize(rows = nil)
 		rows ||= Array.new(HEIGHT) { |i| i = Array.new(LENGTH) { |j| j = " " } }
 		
-		raise InvalidInputError("Invalid board dimensions") unless rows.length == HEIGHT && rows.all? { |r| r.length == LENGTH }
+		raise InvalidInputError.new("Invalid board dimensions") unless rows.length == HEIGHT && rows.all? { |r| r.length == LENGTH }
 		
 		@rows = rows
 	end
@@ -156,6 +156,17 @@ class Board
 		back = Proc.new { |row, col, i| @rows[row][col - i] }
 		
 		check_for_four(token, fwd, back, row, col)
+	end
+
+	def place_token(token, col)
+		raise InvalidInputError.new("Selected column is full.") if @rows[HEIGHT - 1][col] != " "
+
+		0.upto (HEIGHT - 2) do |row|
+			if @rows[row][col] == " "
+				@rows[row][col] = token 
+				return row
+			end
+		end
 	end
 	
 	def vertical_win?(row, col, token)
