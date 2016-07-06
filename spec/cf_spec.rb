@@ -76,7 +76,7 @@ describe ConnectFour do
 	
 	describe ".load" do
 		subject { load }
-		let(:file_name) { "cf_save_example.yml" }
+		let(:file_name) { "/home/marmo/Sites/the_odin_project/ruby/rspec/connect_four/spec/cf_save_example.yml" }
 		let(:load) { ConnectFour.load(file_name) }
 		let(:stream) { File.open(file_name) }
 		
@@ -205,17 +205,17 @@ describe Board do
 		end
 	end
 
-	describe "#check_for_four" do
+	describe "#four_in_row?" do
 		let(:row_idx) { 5 }
 		let(:col_idx) { 3 }
 		let(:token) { "O" }
 		let(:board) { saved_board }
-		subject { board.check_for_four(row_idx, col_idx, token) }
+		subject { board.four_in_row?(row_idx, col_idx, token) }
 
 		it "takes a row index, column index, and string as arguments" do
-			expect { saved_board.check_for_four(row_idx, col_idx, token) }.not_to raise_error
-			expect { saved_board.check_for_four("this", "will", "fail") }.to raise_error(TypeError)
-			expect { saved_board.check_for_four(row_idx, col_idx) }.to raise_error(ArgumentError)
+			expect { saved_board.four_in_row?(row_idx, col_idx, token) }.not_to raise_error
+			expect { saved_board.four_in_row?("this", "will", "fail") }.to raise_error(TypeError)
+			expect { saved_board.four_in_row?(row_idx, col_idx) }.to raise_error(ArgumentError)
 		end
 
 		context "when there are four in a row horizontally" do
@@ -239,7 +239,7 @@ describe Board do
 				rows = []
 
 				4.times do
-					rows.push([" ", " ", " ", "0", " ", " ", " "])
+					rows.push([" ", " ", " ", "O", " ", " ", " "])
 				end
 
 				(Board::HEIGHT - 4).times do
@@ -254,24 +254,24 @@ describe Board do
 		end
 
 		context "when there are four in a row on a northwest diagonal" do
-			let(:row_idx) { 3 }
+			let(:row_idx) { 0 }
 			let(:four_in_row) do
 				rows = []
 				placement = 3
 
 				Board::HEIGHT.times do |i|
-					Board::LENGTH.times do |j|
-						curr_row = []
+					curr_row = []
 
+					Board::LENGTH.times do |j|
 						if placement > -1 && j == placement
 							curr_row << token
 							placement -= 1
 						else
 							curr_row << " "
 						end
-
-						rows.push(curr_row)
 					end
+
+					rows.push(curr_row)
 				end
 
 				rows
@@ -283,24 +283,24 @@ describe Board do
 		end
 
 		context "when there are four in a row on a northeast diagonal" do
-			let(:row_idx) { 3 }
+			let(:row_idx) { 0 }
 			let(:four_in_row) do
 				rows = []
 				placement = 0
 
 				Board::HEIGHT.times do |i|
-					Board::LENGTH.times do |j|
-						curr_row = []
+					curr_row = []
 
+					Board::LENGTH.times do |j|
 						if placement < 4 && j == placement
 							curr_row << token
 							placement += 1
 						else
 							curr_row << " "
 						end
-
-						rows.push(curr_row)
 					end
+
+					rows.push(curr_row)
 				end
 
 				rows
