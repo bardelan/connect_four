@@ -65,7 +65,22 @@ class ConnectFour
 	end
 
 	def play
+		valid_cols = []
 
+		1.upto LENGTH do |i|
+			valid_cols << i
+		end
+
+		loop do
+			@players.each do |player, token|
+				@board.render
+
+				print "\n"
+				prompt("#{player}, please choose a column (1-#{LENGTH}): ", valid_cols) do |col|
+					
+				end
+			end
+		end
 	end
 end
 
@@ -159,8 +174,9 @@ class Board
 	end
 
 	def place_token(token, col)
+		raise InvalidInputError.new("Invalid column number.") if col < 0 || col > LENGTH
 		raise InvalidInputError.new("Selected column is full.") if @rows[HEIGHT - 1][col] != " "
-
+		
 		0.upto (HEIGHT - 2) do |row|
 			if @rows[row][col] == " "
 				@rows[row][col] = token 

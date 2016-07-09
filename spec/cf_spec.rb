@@ -157,6 +157,20 @@ describe ConnectFour do
 			expect(load).to eq sample_board
 		end
 	end
+
+	describe "#play" do
+		let(:game) { ConnectFour.new }
+		let(:play) { game.play }
+		subject { play }
+
+		it "displays the current board state" do
+			expect(game.board).to receive(:render)
+		end
+
+		it "prompts the player for input" do
+			expect(game).to receive(:prompt)
+		end
+	end
 end
 
 describe Board do
@@ -313,6 +327,7 @@ describe Board do
 	end
 
 	describe "#place_token" do
+		let(:new_board) { Board.new }
 		let(:token) { "O" }
 		let(:full_column) do
 			rows = []
@@ -356,11 +371,26 @@ describe Board do
 			Board.new(rows)
 		end
 
-		let(:full_col_index) { full_column[1] }
+		let(:board_ex_1) do
+		 example_board.place_token(token, 0) 
+		 example_board.rows[1][0]
+		end
+
+		let(:board_ex_2) do
+		 example_board.place_token(token, 1)
+		 example_board.rows[2][1]
+		end
+
+		let(:board_ex_3) do
+			example_board.place_token(token, 2)
+			example_board.rows[0][2]
+		end
+
+		let(:full_col_index) { 0 }
 
 		it "takes a token and a column index as arguments" do
 			expect { new_board.place_token(token, 1) }.not_to raise_error
-			expect { new_board.place_token(token, "col") }.to raise_error(TypeError)
+			expect { new_board.place_token(token, "col") }.to raise_error(ArgumentError)
 		end
 
 		it "raises InvalidInputError if column is full" do
@@ -368,14 +398,9 @@ describe Board do
 		end
 
 		it "places the given token in the first empty row" do
-			allow(example_board).to receive(:place_token).with(token, 0)
-			expect(example_board.rows[1][0]).to eq token
-
-			allow(example_board).to receive(:place_token).with(token, 1)
-			expect(example_board.rows[2][1]).to eq token
-
-			allow(example_board).to receive(:place_token).with(token, 2)
-			expect(example_board.rows[0][2]).to eq token
+			expect(board_ex_1).to eq token
+			expect(board_ex_2).to eq token
+			expect(board_ex_3).to eq token
 		end
 	end
 end
