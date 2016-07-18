@@ -25,6 +25,8 @@ class ConnectFour
 				
 				game = load(file_name)
 			end
+
+		#	game.play
 		end
 	end
 	
@@ -67,8 +69,8 @@ class ConnectFour
 	def play
 		valid_cols = []
 
-		1.upto LENGTH do |i|
-			valid_cols << i
+		1.upto Board::LENGTH do |i|
+			valid_cols << i.to_s
 		end
 
 		loop do
@@ -76,7 +78,7 @@ class ConnectFour
 				@board.render
 
 				print "\n"
-				prompt("#{player}, please choose a column (1-#{LENGTH}): ", valid_cols) do |col|
+				ConnectFour.prompt("#{player}, please choose a column (1-#{Board::LENGTH}): ", valid_cols) do |col|
 					
 				end
 			end
