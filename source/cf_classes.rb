@@ -50,7 +50,7 @@ class ConnectFour
 		
 		yield action
 	end
-	
+
 	def initialize(stream = nil)
 		if stream.nil?
 			@board = Board.new
@@ -73,14 +73,34 @@ class ConnectFour
 			valid_cols << i.to_s
 		end
 
-		loop do
+		until winning_player || @board.full? do
+			winning_player = false
+
 			@players.each do |player, token|
 				@board.render
 
 				print "\n"
-				ConnectFour.prompt("#{player}, please choose a column (1-#{Board::LENGTH}): ", valid_cols) do |col|
-					
+				begin
+					ConnectFour.prompt("#{player}, please choose a column (1-#{Board::LENGTH}): ", valid_cols) do |col|
+						col = col.to_i - 1
+						row = @board.place_token(token, col)
+						winning_player = player if @board.four_in_row?(row, col, token)
+					end
+				rescue InvalidInputError => err 
+					puts err.message
+					retry
 				end
+
+				if winning_player || @board.full?
+					@board.render
+					break
+				end
+			end
+
+			if winning_player
+				puts "\n#{winning_player} is the winner!"
+			elsif @board.full?
+				puts "\nThe game is a draw!"
 			end
 		end
 	end
@@ -112,6 +132,14 @@ class Board
 		vertical_win?(row, col, token) || 
 		horizontal_win?(row, col, token) || 
 		diagonal_win?(row, col, token)
+	end
+
+	def full?
+		@rows.each do |row|
+			return false if row.any? { |cell| cell == " " }
+		end
+
+		true
 	end
 	
 	def render

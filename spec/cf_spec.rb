@@ -72,10 +72,6 @@ describe ConnectFour do
 				expect { main }.not_to raise_error
 			end
 		end
-
-		it "begins the game" do
-
-		end
 	end
 	
 	describe ".load" do
@@ -164,19 +160,22 @@ describe ConnectFour do
 
 	describe "#play" do
 		let(:game) { ConnectFour.new }
-		let(:play) { game.play }
-		subject { play }
-		before do 
-			allow(play).to receive(:gets).and_return "1"
-			game.play
+		let(:token) { "O" }
+		let(:col) { 0 }
+		let(:row) { 0 }
+		before(:each) do 
+			allow(ConnectFour).to receive(:gets).and_return("1", "2", "1", "2", "1", "2", "1", "2", "1")
+			expect(game).to receive(:play).and_call_original
 		end
 
 		it "displays the current board state" do
-			expect(game).to receive(:render)
+			expect(game.board).to receive(:render).exactly(8).times
+			game.play
 		end
 
-		it "prompts the player for input" do
-			expect(game).to receive(:prompt)
+		it "updates the board state" do
+			expect(game.board).to receive(:place_token).exactly(8).times
+			game.play
 		end
 	end
 end
