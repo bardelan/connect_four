@@ -59,6 +59,8 @@ describe ConnectFour do
 		let(:main) { ConnectFour.main	}
 		let(:file_name) { "/home/marmo/Sites/the_odin_project/ruby/rspec/connect_four/spec/cf_save_example.yml" }
 		let(:save_file) { File.open(file_name) }
+
+		before(:each) { allow(ConnectFour).to receive(:gets).and_return "n" }
 		
 		it "accepts \"new\" or \"load\" as input" do
 			expect(ConnectFour).to receive(:gets).and_return "new"
@@ -160,22 +162,14 @@ describe ConnectFour do
 
 	describe "#play" do
 		let(:game) { ConnectFour.new }
-		let(:token) { "O" }
-		let(:col) { 0 }
-		let(:row) { 0 }
+		let(:win_message) { "\nPlayer 1 is the winner!" }
 		before(:each) do 
 			allow(ConnectFour).to receive(:gets).and_return("1", "2", "1", "2", "1", "2", "1", "2", "1")
 			expect(game).to receive(:play).and_call_original
 		end
 
-		it "displays the current board state" do
-			expect(game.board).to receive(:render).exactly(8).times
-			game.play
-		end
-
-		it "updates the board state" do
-			expect(game.board).to receive(:place_token).exactly(8).times
-			game.play
+		it "prints the winner if a player wins" do
+			expect(ConnectFour).to have_received(:puts).with(win_message)
 		end
 	end
 end
@@ -330,6 +324,67 @@ describe Board do
 			let(:board) { Board.new(four_in_row) }
 
 			it { is_expected.to be true }
+		end
+	end
+
+	describe "#full?" do
+		let(:full_board) do
+			rows = []
+
+			0.upto (Board::HEIGHT - 1) do |i|
+				curr_row = []
+
+				0.upto(Board::LENGTH - 1) do |j|
+					multiple_of_four = ((i + 1) % 4 == 0)
+
+					case 
+						when multiple_of_four && (j.even? || j.zero?)
+							curr_row << "@"
+						when !multiple_of_four && j.odd?
+							curr_row << "@"
+						else
+							curr_row << "O"
+					end
+				end
+
+				rows.push(curr_row)
+			end
+
+			Board.new(rows).full?
+		end
+
+		let(:partial) do
+			rows = []
+			first_row = []
+
+			0.upto (Board::LENGTH - 1) do |i|
+				if i.even? || i.zero?
+					first_row << "0"
+				else
+					first_row << "@"
+				end
+			end
+
+			rows.push(first_row)
+
+			(Board::HEIGHT - 1).times do
+				curr_row = []
+				Board::LENGTH.times do
+					curr_row << " "
+				end
+
+				rows.push(curr_row)
+			end
+
+			Board.new(rows).full?
+		end
+
+		let(:empty_board) { Board.new.full? }
+
+		it "returns true for an entirely full board" do
+			expect(full_board).to be true
+			expect(partial).to be false
+			expect(empty_board).to be false
 		end
 	end
 

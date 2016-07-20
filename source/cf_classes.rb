@@ -7,26 +7,32 @@ class ConnectFour
 	attr_reader :board, :players
 	
 	def self.main
-		puts "New game or load save file?" 
-		
-		prompt("Enter 'new' or 'load': ", ["new", "load"]) do |response|
-			if response == "new"
-				game = ConnectFour.new
-			else
-				begin
-					puts "Please enter the file name: "
-					file_name = gets.chomp
+		loop do
+			puts "New game or load save file?" 
+			
+			prompt("Enter 'new' or 'load': ", ["new", "load"]) do |response|
+				if response == "new"
+					game = ConnectFour.new
+				else
+					begin
+						puts "Please enter the file name: "
+						file_name = gets.chomp
+						
+						raise InvalidFileName unless File.file?(file_name)
+					rescue InvalidFileName => e
+						puts "Sorry, that file name is not valid."
+						retry
+					end		
 					
-					raise InvalidFileName unless File.file?(file_name)
-				rescue InvalidFileName => e
-					puts "Sorry, that file name is not valid."
-					retry
-				end		
-				
-				game = load(file_name)
+					game = load(file_name)
+				end
+
+			#	game.play
 			end
 
-		#	game.play
+			prompt("\nPlay again?", ["y", "n", "yes", "no"]) do |response|
+				return if response[0] == "n"
+			end
 		end
 	end
 	
@@ -68,14 +74,13 @@ class ConnectFour
 
 	def play
 		valid_cols = []
+		winning_player = false
 
 		1.upto Board::LENGTH do |i|
 			valid_cols << i.to_s
 		end
 
 		until winning_player || @board.full? do
-			winning_player = false
-
 			@players.each do |player, token|
 				@board.render
 
@@ -91,18 +96,18 @@ class ConnectFour
 					retry
 				end
 
-				if winning_player || @board.full?
-					@board.render
+				if winning_player
+					message = "\n#{player} is the winner!"
+					break
+				elsif @board.full?
+					message = "\nThe game is a draw!"
 					break
 				end
 			end
-
-			if winning_player
-				puts "\n#{winning_player} is the winner!"
-			elsif @board.full?
-				puts "\nThe game is a draw!"
-			end
 		end
+
+		@board.render
+		puts message
 	end
 end
 
