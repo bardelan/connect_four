@@ -25,6 +25,8 @@ describe ConnectFour do
 	
 	let(:sample_board) { Board.new(rows) }
 	let(:sample_players) { { "Player 1" => "O", "Player 2" => "@" } }
+	let(:curr_player) { "Player 1" }
+	let(:save_data) { { :current_player => curr_player, :board => sample_board } }
 	
 	context "when initialized with no arguments" do
 		let(:blank_board) { Board.new }
@@ -38,7 +40,7 @@ describe ConnectFour do
 	context "when initialized with an I/O stream" do	
 		let(:game) do
 			f = StringIO.new("", "r+")
-			f.write(YAML.dump(sample_board))
+			f.write(YAML.dump(save_data))
 			new_game = ConnectFour.new(f)
 			f.close
 			
@@ -52,28 +54,6 @@ describe ConnectFour do
 	
 	it "sets players and their markers" do
 		expect(game.players).to eq sample_players
-	end
-	
-	describe ".main" do
-		subject { main }
-		let(:main) { ConnectFour.main	}
-		let(:file_name) { "/home/marmo/Sites/the_odin_project/ruby/rspec/connect_four/spec/cf_save_example.yml" }
-		let(:save_file) { File.open(file_name) }
-
-		before(:each) { allow(ConnectFour).to receive(:gets).and_return "n" }
-		
-		it "accepts \"new\" or \"load\" as input" do
-			expect(ConnectFour).to receive(:gets).and_return "new"
-			expect { main }.not_to raise_error
-		end
-		
-		context "when the user chooses \"load\"" do			
-			it "loads the given file" do
-				expect(ConnectFour).to receive(:gets).and_return("load", file_name)
-				expect(ConnectFour).to receive(:load).and_return ConnectFour.new(save_file)
-				expect { main }.not_to raise_error
-			end
-		end
 	end
 	
 	describe ".load" do
@@ -137,7 +117,7 @@ describe ConnectFour do
 	describe "#save" do		
 		let(:save) do
 			f = StringIO.new("", "r+")
-			f.write(YAML.dump(sample_board))
+			f.write(YAML.dump(save_data))
 			
 			game.save(f)
 			f
@@ -163,13 +143,52 @@ describe ConnectFour do
 	describe "#play" do
 		let(:game) { ConnectFour.new }
 		let(:win_message) { "\nPlayer 1 is the winner!" }
-		before(:each) do 
-			allow(ConnectFour).to receive(:gets).and_return("1", "2", "1", "2", "1", "2", "1", "2", "1")
+		let(:full_board) do
+			rows = []
+
+			0.upto (Board::HEIGHT - 1) do |i|
+				curr_row = []
+
+				0.upto(Board::LENGTH - 1) do |j|
+					multiple_of_four = ((i + 1) % 4 == 0)
+
+					case 
+						when i == Board::HEIGHT - 1 && j == Board::LENGTH - 1
+							curr_row == " "
+						when multiple_of_four && (j.even? || j.zero?)
+							curr_row << "@"
+						when !multiple_of_four && j.odd?
+							curr_row << "@"
+						else
+							curr_row << "O"
+					end
+				end
+
+				rows.push(curr_row)
+			end
+
+			Board.new(rows)
+		end
+
+		let(:draw_game) do
+			mock_file = StringIO.new
+			mock_file.open do
+				mock_file.write(YAML::dump(full_board))
+			end
+		end
+
+		before(:each) do 			
 			expect(game).to receive(:play).and_call_original
 		end
 
 		it "prints the winner if a player wins" do
-			expect(ConnectFour).to have_received(:puts).with(win_message)
+			allow(ConnectFour).to receive(:gets).and_return("1", "2", "1", "2", "1", "2", "1", "2", "1")
+			expect(game).to receive(:puts).with(win_message)
+			game.play
+		end
+
+		skip "notifies the player if the game is a draw" do
+
 		end
 	end
 end
