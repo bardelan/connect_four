@@ -4,37 +4,7 @@ class InvalidInputError < StandardError; end
 class InvalidFileName < InvalidInputError; end
 
 class ConnectFour
-	attr_reader :board, :players
-	
-	def self.main
-		loop do
-			puts "New game or load save file?" 
-			
-			prompt("Enter 'new' or 'load': ", ["new", "load"]) do |response|
-				if response == "new"
-					game = ConnectFour.new
-				else
-					begin
-						puts "Please enter the file name: "
-						file_name = gets.chomp
-						
-						raise InvalidFileName unless File.file?(file_name)
-					rescue InvalidFileName => e
-						puts "Sorry, that file name is not valid."
-						retry
-					end		
-					
-					game = load(file_name)
-				end
-
-			#	game.play
-			end
-
-			prompt("\nPlay again?", ["y", "n", "yes", "no"]) do |response|
-				return if response[0] == "n"
-			end
-		end
-	end
+	attr_reader :board, :players, :current_player
 	
 	def self.load(file_name)
 		File.open(file_name) do |f|
@@ -62,19 +32,27 @@ class ConnectFour
 			@board = Board.new
 		else
 			stream.seek(0) # guarantee that we are at the beginning of the file
-			@board = YAML.load(stream.read)
+			load_data = YAML.load(stream.read)
+			@board = load_data[:board]
+
+			if load_data[:current_player] == "Player 2"
+				@players = { "Player 2" => "@", "Player 1" => "O" }
+				return
+			end
 		end
 		
 		@players = { "Player 1" => "O", "Player 2" => "@" }
 	end
 	
 	def save(stream)
-		stream.write(YAML.dump(@board))	
+		save_data = { :current_player => @current_player, :board => @board }
+		stream.write(YAML.dump(save_data))	
 	end
 
 	def play
 		valid_cols = []
 		winning_player = false
+		message = nil
 
 		1.upto Board::LENGTH do |i|
 			valid_cols << i.to_s
@@ -92,7 +70,7 @@ class ConnectFour
 						winning_player = player if @board.four_in_row?(row, col, token)
 					end
 				rescue InvalidInputError => err 
-					puts err.message
+					puts err.msg
 					retry
 				end
 
