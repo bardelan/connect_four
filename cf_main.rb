@@ -1,4 +1,4 @@
-require_relative "cf_classes.rb"
+require_relative "./lib/cf_classes.rb"
 	
 loop do
 	puts "New game or load save file?" 
