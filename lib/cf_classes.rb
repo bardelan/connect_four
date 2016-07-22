@@ -49,6 +49,16 @@ class ConnectFour
 		stream.write(YAML.dump(save_data))	
 	end
 
+	def save_and_quit
+		print "\nPlease enter a file name: "
+		filename = gets.strip
+		filename += ".yml" unless filename[-4..-1].include?(".yml")
+
+		File.open(filename, "w") { |f| save(f) } 
+		
+		abort("Saving to file \"#{filename}\" and quitting... goodbye.")
+	end
+
 	def play
 		valid_cols = []
 		winning_player = false
@@ -58,21 +68,27 @@ class ConnectFour
 			valid_cols << i.to_s
 		end
 
+		valid_cols << "save"
+
 		until winning_player || @board.full? do
 			@players.each do |player, token|
 				@board.render
 
 				print "\n"
 				begin
-					ConnectFour.prompt("#{player}, please choose a column (1-#{Board::LENGTH}): ", valid_cols) do |col|
+					ConnectFour.prompt("#{player}, please choose a column (1-#{Board::LENGTH})\nor enter \"save\" to save and quit: ", valid_cols) do |col|
+						save_and_quit if col.downcase == "save"
+
 						col = col.to_i - 1
 						row = @board.place_token(token, col)
 						winning_player = player if @board.four_in_row?(row, col, token)
 					end
 				rescue InvalidInputError => err 
-					puts err.msg
+					puts err.message
 					retry
 				end
+
+
 
 				if winning_player
 					message = "\n#{player} is the winner!"
@@ -190,7 +206,7 @@ class Board
 		raise InvalidInputError.new("Invalid column number.") if col < 0 || col > LENGTH
 		raise InvalidInputError.new("Selected column is full.") if @rows[HEIGHT - 1][col] != " "
 		
-		0.upto (HEIGHT - 2) do |row|
+		0.upto (HEIGHT - 1) do |row|
 			if @rows[row][col] == " "
 				@rows[row][col] = token 
 				return row

@@ -1,4 +1,4 @@
-require_relative '../source/cf_classes.rb'
+require_relative '../lib/cf_classes.rb'
 require 'stringio'
 
 describe ConnectFour do
@@ -58,7 +58,9 @@ describe ConnectFour do
 	
 	describe ".load" do
 		subject { load }
-		let(:file_name) { "/home/marmo/Sites/the_odin_project/ruby/rspec/connect_four/spec/cf_save_example.yml" }
+		let(:file_name) do
+			File.expand_path("cf_save_example.yml", File.dirname(__FILE__))
+		end
 		let(:load) { ConnectFour.load(file_name) }
 		let(:stream) { File.open(file_name) }
 		
@@ -140,9 +142,34 @@ describe ConnectFour do
 		end
 	end
 
+	describe "#save_and_quit" do
+		let(:game) { ConnectFour.new }
+
+		before(:each) do
+			allow(game).to receive(:gets).and_return("test_file.yml")
+			allow(STDERR).to receive(:puts).with("Saving to file \"test_file.yml\" and quitting... goodbye.")
+			allow(game).to receive(:abort)
+
+			expect(game).to receive(:save_and_quit).and_call_original
+		end
+
+		after(:all) { File.unlink("test_file.yml") }
+
+		it "saves the game" do
+			expect(game).to receive(:save).with(an_instance_of File)
+			game.save_and_quit
+		end
+
+		it "ends the program" do
+			expect(game).to receive(:abort)
+			game.save_and_quit
+		end
+	end
+
 	describe "#play" do
 		let(:game) { ConnectFour.new }
 		let(:win_message) { "\nPlayer 1 is the winner!" }
+		let(:draw_message) { "\nThe game is a draw!" }
 		let(:full_board) do
 			rows = []
 
@@ -154,7 +181,7 @@ describe ConnectFour do
 
 					case 
 						when i == Board::HEIGHT - 1 && j == Board::LENGTH - 1
-							curr_row == " "
+							curr_row << " "
 						when multiple_of_four && (j.even? || j.zero?)
 							curr_row << "@"
 						when !multiple_of_four && j.odd?
@@ -171,14 +198,8 @@ describe ConnectFour do
 		end
 
 		let(:draw_game) do
-			mock_file = StringIO.new
-			mock_file.open do
-				mock_file.write(YAML::dump(full_board))
-			end
-		end
-
-		before(:each) do 			
-			expect(game).to receive(:play).and_call_original
+			mock_file = StringIO.new(YAML::dump({ :current_player => "Player 1", :board => full_board }))
+			ConnectFour.new(mock_file)
 		end
 
 		it "prints the winner if a player wins" do
@@ -187,8 +208,10 @@ describe ConnectFour do
 			game.play
 		end
 
-		skip "notifies the player if the game is a draw" do
-
+		it "notifies the player if the game is a draw" do
+			allow(ConnectFour).to receive(:gets).and_return(Board::LENGTH.to_s)
+			expect(draw_game).to receive(:puts).with(draw_message)
+			draw_game.play
 		end
 	end
 end
